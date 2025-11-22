@@ -3,172 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Crash Game</title>
+    <title>Crypto Crash - Pro</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #121212; color: #e0e0e0; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { display: flex; gap: 2rem; }
-        .game, .controls, .logs { background-color: #1e1e1e; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-        .multiplier { font-size: 5rem; font-weight: bold; text-align: center; color: #4caf50; transition: color 0.3s; }
-        .crashed { color: #f44336 !important; }
-        h2, h3 { color: #fff; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
-        input, select, button { width: 100%; padding: 0.8rem; margin-top: 0.5rem; border-radius: 4px; border: 1px solid #444; background-color: #333; color: #fff; box-sizing: border-box; }
-        button { cursor: pointer; background-color: #007bff; font-weight: bold; }
-        button:disabled { background-color: #555; cursor: not-allowed; }
-        #cashoutBtn { background-color: #ff9800; }
-        #logs { height: 200px; overflow-y: auto; background-color: #111; padding: 1rem; border-radius: 4px; font-family: monospace; }
-        .log-item { margin-bottom: 0.5em; }
-        .log-crash { color: #f44336; }
-        .log-cashout { color: #ff9800; }
-        .log-start { color: #4caf50; }
+        :root { --primary: #007bff; --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --green: #4caf50; --red: #f44336; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+        
+        /* Auth Screens */
+        #auth-container { display: flex; justify-content: center; align-items: center; height: 100%; }
+        .auth-box { background-color: var(--panel); padding: 2rem; border-radius: 12px; width: 350px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); text-align: center; }
+        .auth-box h2 { margin-bottom: 1.5rem; color: #fff; }
+        .auth-box input { width: 100%; padding: 12px; margin: 8px 0; background: #333; border: 1px solid #444; color: #fff; border-radius: 6px; box-sizing: border-box; }
+        .auth-box button { width: 100%; padding: 12px; margin-top: 1rem; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .toggle-link { margin-top: 1rem; font-size: 0.9rem; color: #888; cursor: pointer; }
+        .toggle-link:hover { color: var(--primary); }
+
+        /* App Layout */
+        #app-container { display: none; height: 100%; flex-direction: column; }
+        header { background: var(--panel); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        .brand { font-size: 1.5rem; font-weight: bold; color: var(--green); }
+        .user-nav { display: flex; gap: 1rem; align-items: center; }
+        .nav-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1rem; }
+        .nav-btn:hover { color: #fff; }
+        .logout-btn { color: var(--red); }
+
+        /* Dashboard & Game */
+        main { flex: 1; padding: 2rem; display: flex; justify-content: center; gap: 2rem; }
+        .panel { background: var(--panel); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        
+        /* Game Specifics */
+        .game-area { flex: 2; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .multiplier { font-size: 6rem; font-weight: bold; color: var(--green); }
+        .multiplier.crashed { color: var(--red); }
+        .controls-area { flex: 1; min-width: 300px; }
+        .input-group { margin-bottom: 1rem; }
+        .input-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #aaa; }
+        select, input { width: 100%; padding: 10px; background: #2c2c2c; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .action-btn { width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 1rem; }
+        .btn-bet { background: var(--green); color: #000; }
+        .btn-cashout { background: #ff9800; color: #000; }
+        .btn-disabled { background: #444; color: #888; cursor: not-allowed; }
+
+        /* Wallet & Logs */
+        .wallet-card { background: linear-gradient(45deg, #1e1e1e, #2a2a2a); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #333; }
+        .balance { font-size: 1.2rem; margin: 0.5rem 0; }
+        .usd-val { color: #888; font-size: 0.9rem; }
+        #logs { height: 200px; overflow-y: auto; background: #111; padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.9rem; }
+        .log-crash { color: var(--red); }
+        .log-win { color: #ff9800; }
+        .log-start { color: var(--green); }
+
+        /* Withdraw Modal */
+        .withdraw-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #333; }
+        .withdraw-btn { width: 100%; background: #333; border: 1px solid #555; color: #ccc; padding: 8px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="game">
-            <h2>Game</h2>
-            <div class="multiplier" id="multiplier">1.00x</div>
+    <div id="auth-container">
+        <div class="auth-box" id="login-box">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Username">
+            <input type="password" id="login-password" placeholder="Password">
+            <button id="loginBtn">Sign In</button>
+            <div class="toggle-link" onclick="toggleAuth('register')">Don't have an account? Register</div>
         </div>
 
-        <div class="controls">
-            <h3>Controls</h3>
-            <div id="user-info"></div>
-            <div id="user-creation">
-                <input type="text" id="username" placeholder="Enter Username">
-                <button id="createUserBtn">Create User</button>
-            </div>
-            <div id="betting-controls" style="display: none;">
-                <input type="number" id="betAmount" placeholder="Bet Amount (USD)" value="10">
-                <select id="currency">
-                    <option value="BTC">BTC</option>
-                    <option value="ETH">ETH</option>
-                </select>
-                <button id="placeBetBtn">Place Bet</button>
-                <button id="cashoutBtn" disabled>CASH OUT</button>
-            </div>
+        <div class="auth-box" id="register-box" style="display: none;">
+            <h2>Create Account</h2>
+            <input type="text" id="reg-username" placeholder="Username">
+            <input type="password" id="reg-password" placeholder="Password">
+            <button id="registerBtn">Register</button>
+            <div class="toggle-link" onclick="toggleAuth('login')">Already have an account? Login</div>
         </div>
+    </div>
 
-        <div class="logs">
-            <h3>Event Log</h3>
-            <div id="logs"></div>
-        </div>
+    <div id="app-container">
+        <header>
+            <div class="brand">CryptoCrash</div>
+            <div class="user-nav">
+                <span id="nav-username">Guest</span>
+                <button class="nav-btn logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="panel game-area">
+                <div class="multiplier" id="multiplier">1.00x</div>
+                <div id="game-status" style="margin-top: 1rem; color: #666;">Waiting for round...</div>
+            </div>
+
+            <div class="panel controls-area">
+                <div class="wallet-card">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Wallet Balance</span>
+                        <span id="refresh-wallet" style="cursor: pointer;">↻</span>
+                    </div>
+                    <div class="balance" id="wallet-btc">0.000000 BTC</div>
+                    <div class="balance" id="wallet-eth">0.0000 ETH</div>
+                    <div class="usd-val" id="wallet-usd">≈ $0.00</div>
+                    
+                    <div class="withdraw-section">
+                        <button class="withdraw-btn" onclick="alert('Withdrawal feature coming soon to banking partners!')">Withdraw to Bank</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Amount (USD)</label>
+                    <input type="number" id="betAmount" value="10">
+                </div>
+                <div class="input-group">
+                    <label>Currency</label>
+                    <select id="currency">
+                        <option value="BTC">Bitcoin (BTC)</option>
+                        <option value="ETH">Ethereum (ETH)</option>
+                    </select>
+                </div>
+
+                <button id="placeBetBtn" class="action-btn btn-bet">PLACE BET</button>
+                <button id="cashoutBtn" class="action-btn btn-disabled" disabled>CASH OUT</button>
+
+                <div style="margin-top: 1.5rem; font-size: 0.9rem; color: #aaa;">Game Logs</div>
+                <div id="logs"></div>
+            </div>
+        </main>
     </div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
-        const socket = io("https://crypto-crash-game-i6xw.onrender.com");
-
-        // --- STATE ---
-        let userId = null;
+        // --- CONFIGURATION ---
+        // Set to Localhost for development (No ngrok needed!)
+        const API_URL = "http://localhost:3000"; 
+        
+        let socket = null;
+        let currentUser = null;
+        let token = localStorage.getItem('token');
         let betPlaced = false;
 
-        // --- UI ELEMENTS ---
-        const multiplierEl = document.getElementById('multiplier');
-        const placeBetBtn = document.getElementById('placeBetBtn');
-        const cashoutBtn = document.getElementById('cashoutBtn');
-        const logsEl = document.getElementById('logs');
-        const userInfoEl = document.getElementById('user-info');
-        const bettingControlsEl = document.getElementById('betting-controls');
-        const userCreationEl = document.getElementById('user-creation');
-        const createUserBtn = document.getElementById('createUserBtn');
-
-        // --- HELPER FUNCTIONS ---
-        function log(message, className = '') {
-            const item = document.createElement('div');
-            item.className = `log-item ${className}`;
-            item.textContent = `> ${message}`;
-            logsEl.appendChild(item);
-            logsEl.scrollTop = logsEl.scrollHeight;
+        // --- INITIALIZATION ---
+        if (token) {
+            showApp();
+        } else {
+            showAuth();
         }
 
+        // --- VIEW SWITCHING ---
+        function toggleAuth(view) {
+            document.getElementById('login-box').style.display = view === 'login' ? 'block' : 'none';
+            document.getElementById('register-box').style.display = view === 'register' ? 'block' : 'none';
+        }
+
+        function showAuth() {
+            document.getElementById('auth-container').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
+        }
+
+        function showApp() {
+            currentUser = JSON.parse(localStorage.getItem('user'));
+            if(!currentUser) return logout();
+
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('app-container').style.display = 'flex';
+            document.getElementById('nav-username').textContent = currentUser.username;
+
+            // Initialize Socket
+            socket = io(API_URL);
+            setupSocketListeners();
+            updateWallet();
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            if(socket) socket.disconnect();
+            location.reload();
+        }
+
+        // --- AUTH API ---
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const u = document.getElementById('login-username').value;
+            const p = document.getElementById('login-password').value;
+            await handleAuth('/api/auth/login', { username: u, password: p });
+        });
+
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const u = document.getElementById('reg-username').value;
+            const p = document.getElementById('reg-password').value;
+            await handleAuth('/api/auth/register', { username: u, password: p });
+        });
+
+        async function handleAuth(endpoint, payload) {
+            try {
+                const res = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify({ _id: data._id, username: data.username }));
+                    showApp();
+                } else {
+                    alert(data.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Connection error. Ensure backend is running on localhost:3000');
+            }
+        }
+
+        // --- GAME API ---
         async function updateWallet() {
-            if (!userId) return;
-            const res = await fetch(`https://crypto-crash-game-i6xw.onrender.com/api/users/${userId}/wallet`);
-            const data = await res.json();
-            userInfoEl.innerHTML = `
-                <p><strong>UserID:</strong> ${userId.substring(0,8)}...</p>
-                <p><strong>Wallet:</strong> ${data.wallet.BTC.toFixed(6)} BTC, ${data.wallet.ETH.toFixed(4)} ETH</p>
-                <p><strong>Total Value:</strong> $${data.usd_equivalents.total.toFixed(2)}</p>
-            `;
+            if (!currentUser) return;
+            try {
+                const res = await fetch(`${API_URL}/api/users/${currentUser._id}/wallet`);
+                const data = await res.json();
+                
+                document.getElementById('wallet-btc').textContent = `${data.wallet.BTC.toFixed(6)} BTC`;
+                document.getElementById('wallet-eth').textContent = `${data.wallet.ETH.toFixed(4)} ETH`;
+                document.getElementById('wallet-usd').textContent = `≈ $${data.usd_equivalents.total.toFixed(2)} USD`;
+            } catch (e) { console.error(e); }
         }
 
-        // --- API CALLS ---
-        createUserBtn.addEventListener('click', async () => {
-            const username = document.getElementById('username').value;
-            if (!username) return alert('Please enter a username');
-            const res = await fetch('https://crypto-crash-game-i6xw.onrender.com/api/users', {
+        document.getElementById('placeBetBtn').addEventListener('click', async () => {
+            const amt = document.getElementById('betAmount').value;
+            const curr = document.getElementById('currency').value;
+            
+            const res = await fetch(`${API_URL}/api/game/bet`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username }),
+                body: JSON.stringify({ userId: currentUser._id, betAmountUSD: parseFloat(amt), currency: curr })
             });
             const data = await res.json();
+            
             if (res.ok) {
-                userId = data.user._id;
-                userCreationEl.style.display = 'none';
-                bettingControlsEl.style.display = 'block';
-                updateWallet();
-            } else {
-                alert(data.message);
-            }
-        });
-
-        placeBetBtn.addEventListener('click', async () => {
-            const betAmountUSD = document.getElementById('betAmount').value;
-            const currency = document.getElementById('currency').value;
-            const res = await fetch('https://crypto-crash-game-i6xw.onrender.com/api/game/bet', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, betAmountUSD: parseFloat(betAmountUSD), currency }),
-            });
-            const data = await res.json();
-            if (res.ok) {
-                log(`Bet placed for $${betAmountUSD}. Waiting for next round.`);
+                log(`Bet placed: $${amt} on ${curr}`);
                 betPlaced = true;
-                placeBetBtn.disabled = true;
+                document.getElementById('placeBetBtn').disabled = true;
+                document.getElementById('placeBetBtn').classList.add('btn-disabled');
                 updateWallet();
             } else {
                 alert(data.message);
             }
         });
 
-        cashoutBtn.addEventListener('click', () => {
-            socket.emit('cashout', { userId });
-            cashoutBtn.disabled = true;
+        document.getElementById('cashoutBtn').addEventListener('click', () => {
+            if(socket) socket.emit('cashout', { userId: currentUser._id });
+            const btn = document.getElementById('cashoutBtn');
+            btn.disabled = true;
+            btn.classList.add('btn-disabled');
+            btn.classList.remove('btn-cashout');
         });
 
-        // --- WEBSOCKET LISTENERS ---
-        socket.on('connect', () => log('Connected to server.'));
-        socket.on('round_start', () => {
-            log('--- Round Started ---', 'log-start');
-            multiplierEl.textContent = '1.00x';
-            multiplierEl.classList.remove('crashed');
-            placeBetBtn.disabled = true; // Can't bet mid-round
-            if (betPlaced) {
-                cashoutBtn.disabled = false; // Enable cashout if a bet was placed
-            }
-        });
+        // --- SOCKET LOGIC ---
+        function setupSocketListeners() {
+            const mulEl = document.getElementById('multiplier');
+            const statusEl = document.getElementById('game-status');
+            const betBtn = document.getElementById('placeBetBtn');
+            const cashBtn = document.getElementById('cashoutBtn');
 
-        socket.on('multiplier_update', (data) => {
-            multiplierEl.textContent = `${data.multiplier.toFixed(2)}x`;
-        });
+            socket.on('round_start', () => {
+                log('Round Started!', 'log-start');
+                mulEl.textContent = '1.00x';
+                mulEl.classList.remove('crashed');
+                statusEl.textContent = 'Round in progress...';
+                
+                betBtn.disabled = true;
+                betBtn.classList.add('btn-disabled');
+                betBtn.classList.remove('btn-bet');
 
-        socket.on('round_crash', (data) => {
-            log(`--- CRASHED @ ${data.crashPoint.toFixed(2)}x ---`, 'log-crash');
-            multiplierEl.textContent = `${data.crashPoint.toFixed(2)}x`;
-            multiplierEl.classList.add('crashed');
-            placeBetBtn.disabled = false; // Allow betting for next round
-            cashoutBtn.disabled = true;
-            betPlaced = false;
-            updateWallet(); // Update wallet to see if we won or lost
-        });
+                if (betPlaced) {
+                    cashBtn.disabled = false;
+                    cashBtn.classList.remove('btn-disabled');
+                    cashBtn.classList.add('btn-cashout');
+                }
+            });
 
-        socket.on('player_cashed_out', (data) => {
-            log(`${data.username} cashed out @ ${data.cashout_multiplier}x for $${data.payout_usd}`, 'log-cashout');
-        });
+            socket.on('multiplier_update', (data) => {
+                mulEl.textContent = `${data.multiplier.toFixed(2)}x`;
+            });
 
-        socket.on('cashout_success', () => log('You cashed out successfully!', 'log-cashout'));
-        socket.on('cashout_error', (data) => alert(`Cashout Failed: ${data.message}`));
+            socket.on('round_crash', (data) => {
+                log(`CRASHED @ ${data.crashPoint}x`, 'log-crash');
+                mulEl.textContent = `${data.crashPoint}x`;
+                mulEl.classList.add('crashed');
+                statusEl.textContent = 'Crashed! Place bets for next round.';
 
+                betBtn.disabled = false;
+                betBtn.classList.remove('btn-disabled');
+                betBtn.classList.add('btn-bet');
+                
+                cashBtn.disabled = true;
+                cashBtn.classList.add('btn-disabled');
+                cashBtn.classList.remove('btn-cashout');
+                betPlaced = false;
+                updateWallet();
+            });
+
+            socket.on('player_cashed_out', (data) => {
+                log(`${data.username} won $${data.payout_usd} (@${data.cashout_multiplier}x)`, 'log-win');
+            });
+
+            socket.on('cashout_success', () => log('You cashed out successfully!', 'log-win'));
+            socket.on('cashout_error', (data) => alert(`Cashout Failed: ${data.message}`));
+        }
+
+        function log(msg, cls = '') {
+            const el = document.getElementById('logs');
+            const item = document.createElement('div');
+            item.textContent = `> ${msg}`;
+            if(cls) item.classList.add(cls);
+            el.appendChild(item);
+            el.scrollTop = el.scrollHeight;
+        }
+        
+        document.getElementById('refresh-wallet').addEventListener('click', updateWallet);
     </script>
 </body>
 </html>
