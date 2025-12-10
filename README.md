@@ -1,6 +1,6 @@
 # Crypto Crash
 
-Backend for "Crypto Crash", a real-time multiplayer betting game. Players bet in USD (converted to crypto), watch a multiplier increase, and try to cash out before it randomly crashes.
+"Crypto Crash", a real-time multiplayer betting game. Players bet in USD (converted to crypto), watch a multiplier increase, and try to cash out before it randomly crashes.
 
 Tech stack: Node.js, Express, MongoDB, Socket.IO. Features a provably-fair RNG, real-time crypto price integration (CoinGecko), and simulated player wallets.
 
