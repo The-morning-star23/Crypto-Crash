@@ -1,4 +1,4 @@
-# Crypto Crash - Backend
+# Crypto Crash
 
 Backend for "Crypto Crash", a real-time multiplayer betting game. Players bet in USD (converted to crypto), watch a multiplier increase, and try to cash out before it randomly crashes.
 
